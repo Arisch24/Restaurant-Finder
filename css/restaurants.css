@@ -1,0 +1,116 @@
+body {
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+}
+
+main {
+	display: grid;
+	grid-template-rows: auto 1fr;
+	grid-template-columns: 250px 1fr;
+	grid-template-areas: 'panel map' 'panel map';
+	overflow: auto;
+}
+
+/* Panels */
+#panel {
+	grid-area: panel;
+	padding: 0.5rem;
+	overflow-y: auto;
+}
+
+#panel > h3 {
+	margin-bottom: 0.5rem;
+}
+
+/* Marker div */
+.marker {
+	position: relative;
+	background-color: var(--white);
+	border: 1px solid var(--grey);
+	border-radius: 5px;
+	padding: 0.25rem;
+	margin-bottom: 0.3rem;
+	cursor: pointer;
+}
+
+.marker img {
+	border: 1px solid hsl(0, 0%, 50%);
+	width: 45px;
+	height: 45px;
+	float: left;
+	margin-right: 0.2rem;
+}
+
+.marker div {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.marker .label {
+	padding: 0.25rem;
+	background-color: var(--secondary);
+}
+
+.marker input {
+	display: none;
+	position: absolute;
+	right: 0.25rem;
+	top: 0.25rem;
+	width: 1.25rem;
+}
+
+.marker:hover input {
+	display: block;
+}
+
+/* Marker animation */
+.marker.animation {
+	animation: highlight infinite 3s ease-in-out forwards;
+}
+
+@keyframes highlight {
+	0% {
+		background-color: hsl(0, 0%, 70%);
+	}
+	25% {
+		background-color: var(--white);
+	}
+	50% {
+		background-color: hsl(0, 0%, 70%);
+	}
+	75% {
+		background-color: var(--white);
+	}
+	100% {
+		background-color: hsl(0, 0%, 70%);
+	}
+}
+
+/* Info windows */
+#info > div {
+	display: block;
+	margin-bottom: 0.2rem;
+}
+
+#info > label {
+	display: inline-block;
+}
+
+#info > div > input {
+	padding: 0.1rem;
+	font-size: 1rem;
+}
+
+#info img {
+	border: 1px solid var(--grey);
+	width: 100px;
+	height: 100px;
+	cursor: pointer;
+}
+
+/* Map */
+#map {
+	grid-area: map;
+	border: 1px solid var(--grey);
+}

@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap');
+
+:root {
+	--black: #000;
+	--white: #fff;
+	--primary: #eae7dc;
+	--secondary: #d8c3a5;
+	--grey: #8e8d8a;
+	--tertiary-light: #e98074;
+	--tertiary: #e85a4f;
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+	height: 100vh;
+	background: var(--primary);
+}
+
+header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	background: var(--secondary);
+}
+
+header h1 {
+	padding-left: 2rem;
+}
+
+h1 > a {
+	font-size: 2rem;
+	color: var(--tertiary);
+}
+
+a {
+	text-decoration: none;
+	color: var(--black);
+}
+
+.navigation-bar {
+	min-width: 70%;
+}
+
+.navigation-bar > ul {
+	height: 100%;
+	display: flex;
+	list-style: none;
+	justify-content: space-evenly;
+}
+
+.navigation-bar a {
+	position: relative;
+	width: 100%;
+	padding: 1.5rem 0;
+	display: inline-block;
+	font-size: 1.2rem;
+	text-align: center;
+	white-space: nowrap;
+}
+
+.navigation-bar a::after {
+	content: '';
+	position: absolute;
+	bottom: 0;
+	display: block;
+	height: 0.3rem;
+	width: 0%;
+	background-color: var(--tertiary-light);
+	transition: width 300ms ease-in-out;
+}
+
+.navigation-bar a:hover::after {
+	width: 100%;
+}
+
+button {
+	font-size: 0.9rem;
+	padding: 0.1rem 0.2rem;
+	cursor: pointer;
+}

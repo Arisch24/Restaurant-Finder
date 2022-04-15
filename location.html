@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="css/style.css" />
+		<link rel="stylesheet" href="css/location.css" />
+		<link
+			rel="shortcut icon"
+			href="image/restaurant.jpg"
+			type="image/x-icon"
+		/>
+		<title>Restaurants : My Location</title>
+	</head>
+	<body>
+		<header>
+			<h1><a href="index.html">Restaurant🍽️</a></h1>
+			<nav class="navigation-bar">
+				<ul>
+					<a href="restaurants.html">View Restaurants</a>
+					<a href="reviews.html">Reviews</a>
+					<a href="location.html">Location</a>
+					<a href="table.html">Table</a>
+				</ul>
+			</nav>
+		</header>
+		<main id="location" v-cloak>
+			<div id="panel">
+				<button @click="getLocation">Get location</button>
+				<div>Latitude = {{ lat | number(6) }}</div>
+				<div>Longitude = {{ lng | number(6) }}</div>
+				<div>Accurary = {{ acc }} meter(s)</div>
+			</div>
+			<div hidden>
+				<div id="info">
+					<h3>{{ label }}</h3>
+					<img :src="image" />
+				</div>
+			</div>
+			<div id="map"></div>
+		</main>
+	</body>
+	<script src="https://www.gstatic.com/firebasejs/7.17.1/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/7.17.1/firebase-firestore.js"></script>
+	<script src="https://maps.googleapis.com/maps/api/js?key=&libraries=drawing"></script>
+	<script src="js/jquery.slim.js"></script>
+	<script src="js/vue.js"></script>
+	<script src="js/app.js"></script>
+	<script>
+		// Firebase
+		firebase.initializeApp({
+			projectId: 'ewt-assignment-2',
+		});
+
+		const ref = firebase.firestore().collection('markers');
+
+		// Vue
+		const vm = new Vue({
+			el: '#location',
+			data: {
+				markers: [],
+				result: [],
+				id: '',
+				label: '',
+				image: '',
+				lat: 0,
+				lng: 0,
+				acc: 0,
+			},
+			methods: {
+				getLocation() {
+					let options = {
+						enableHighAccuracy: true,
+						timeout: Infinity,
+						maximumAge: 0,
+					};
+
+					navigator.geolocation.getCurrentPosition(
+						success,
+						fail,
+						options
+					);
+				},
+			},
+			created() {
+				ref.get().then((snapshot) => {
+					snapshot.docs.forEach((doc) => {
+						addMarker(doc.id, doc.data());
+					});
+				});
+			},
+		});
+
+		// Google map
+		const gm = google.maps;
+
+		const center = new gm.LatLng(5.45308771297349, 100.28485303986125);
+
+		const map = new gm.Map($('#map')[0], {
+			center,
+			zoom: 16,
+			disableDefaultUI: true,
+			clickableIcons: false,
+			disableDoubleClickZoom: true,
+		});
+
+		// Drawing manager
+		const mgr = new gm.drawing.DrawingManager({
+			map,
+			drawingControlOptions: {
+				drawingModes: ['circle', 'rectangle', 'polygon'],
+				position: gm.ControlPosition.TOP_RIGHT,
+			},
+			circleOptions: {
+				draggable: true,
+				strokeColor: 'red',
+				fillColor: 'red',
+			},
+			rectangleOptions: {
+				draggable: true,
+				strokeColor: 'green',
+				fillColor: 'green',
+			},
+			polygonOptions: {
+				draggable: true,
+				strokeColor: 'blue',
+				fillColor: 'blue',
+			},
+		});
+
+		let circle = null;
+		let rectangle = null;
+		let poly = null;
+
+		mgr.addListener('overlaycomplete', (e) => {
+			switch (e.type) {
+				case 'circle':
+					let c = e.overlay;
+					updateCircle(c);
+					break;
+			}
+		});
+
+		mgr.addListener('circlecomplete', (o) => {
+			o.setMap(null);
+			setCircle(o);
+		});
+
+		function setCircle(o) {
+			if (circle) {
+				circle.setMap(null);
+			}
+
+			circle = new gm.Circle({
+				map,
+				center: o.center,
+				radius: o.radius,
+				draggable: true,
+				strokeColor: 'red',
+				fillColor: 'red',
+			});
+
+			circle.addListener('click', (e) => {
+				updateCircle(circle);
+			});
+
+			circle.addListener('drag', (e) => {
+				updateCircle(circle);
+			});
+		}
+
+		function updateCircle(c) {
+			// reset markers
+			vm.markers.forEach((m) => m.setIcon(null));
+
+			// check whether there are markers in the circle radius
+			let radius = c.radius;
+			for (let m of vm.markers) {
+				let p1 = c.center;
+				let p2 = m.position;
+				let distance = gm.geometry.spherical.computeDistanceBetween(
+					p1,
+					p2
+				);
+
+				if (distance <= radius) {
+					m.setIcon('image/home-24.png');
+					vm.result.push(m);
+				}
+			}
+		}
+
+		mgr.addListener('rectanglecomplete', (o) => {
+			o.setMap(null);
+			setRectangle(o);
+		});
+
+		function setRectangle(o) {
+			if (rectangle) {
+				rectangle.setMap(null);
+			}
+
+			rectangle = new gm.Rectangle({
+				map,
+				bounds: o.bounds,
+				strokeColor: 'green',
+				fillColor: 'green',
+			});
+		}
+
+		mgr.addListener('polygoncomplete', (o) => {
+			o.setMap(null);
+			setPolygon(o.getPath());
+		});
+
+		function setPolygon(path) {
+			if (poly) {
+				poly.setMap(null);
+			}
+
+			// Create a new polygon based on the path given
+			poly = new gm.Polygon({
+				map,
+				path,
+				strokeColor: 'blue',
+				fillColor: 'blue',
+			});
+		}
+
+		// Markers
+		const marker = new gm.Marker({
+			map,
+			animation: gm.Animation.DROP,
+			icon: 'image/home-24.png',
+		});
+
+		const info = new gm.InfoWindow({
+			content: $('#info')[0],
+		});
+
+		info.addListener('domready', (e) => {
+			$('#info input').focus();
+		});
+
+		function addMarker(id, data) {
+			let m = new gm.Marker({
+				map,
+				animation: gm.Animation.DROP,
+				draggable: false,
+				id,
+				position: data.position,
+				label: data.label,
+				image: data.image,
+			});
+
+			vm.markers.push(m);
+
+			m.addListener('click', (e) => {
+				vm.id = m.id;
+				vm.label = m.label;
+				vm.image = m.image;
+				info.open(map, m);
+			});
+		}
+
+		// Geolocation
+		function success(position) {
+			vm.lat = position.coords.latitude;
+			vm.lng = position.coords.longitude;
+			vm.acc = position.coords.accuracy;
+
+			let p = new gm.LatLng(vm.lat, vm.lng);
+			marker.setPosition(p);
+			map.panTo(p);
+		}
+
+		function fail(error) {
+			// TODO(3): Display error message
+			alert(`ERROR: (${error.code} ${error.message})`);
+		}
+	</script>
+</html>

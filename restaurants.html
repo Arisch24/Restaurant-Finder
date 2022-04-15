@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="css/style.css" />
+		<link rel="stylesheet" href="css/restaurants.css" />
+		<link
+			rel="shortcut icon"
+			href="image/restaurant.jpg"
+			type="image/x-icon"
+		/>
+		<title>Restaurants : Home</title>
+	</head>
+	<body>
+		<header>
+			<h1><a href="index.html">Restaurant🍽️</a></h1>
+			<nav class="navigation-bar">
+				<ul>
+					<a href="restaurants.html">View Restaurants</a>
+					<a href="reviews.html">Reviews</a>
+					<a href="location.html">Location</a>
+					<a href="table.html">Table</a>
+				</ul>
+			</nav>
+		</header>
+		<main id="restaurants" v-cloak>
+			<div id="panel">
+				<h3>{{ markers.length }} marker(s)</h3>
+				<div class="marker" v-for="m of markers" @click="panTo(m)">
+					<img :src="m.image" />
+					<div class="label">{{ m.label }}</div>
+					<small>
+						{{ m.position.lat() | number(6) }}, {{ m.position.lng()
+						| number(6) }}
+					</small>
+					<input
+						type="image"
+						src="image/remove.png"
+						@click.stop="remove(m)"
+					/>
+				</div>
+			</div>
+			<div hidden>
+				<form id="info" @submit.prevent="save">
+					<div>
+						<input
+							v-model.trim="label"
+							required
+							@keydown.esc="cancel"
+						/>
+					</div>
+					<label>
+						<input type="file" @change="change" hidden />
+						<img :src="image" />
+					</label>
+					<div>
+						<button>Save</button>
+						<button @click.prevent="cancel">Cancel</button>
+					</div>
+				</form>
+			</div>
+			<div id="map"></div>
+		</main>
+	</body>
+	<script src="https://www.gstatic.com/firebasejs/7.17.1/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/7.17.1/firebase-firestore.js"></script>
+	<script src="https://maps.googleapis.com/maps/api/js?key="></script>
+	<script src="js/jquery.slim.js"></script>
+	<script src="js/vue.js"></script>
+	<script src="js/app.js"></script>
+	<script>
+		// Firebase
+		firebase.initializeApp({
+			projectId: 'ewt-assignment-2',
+		});
+
+		const ref = firebase.firestore().collection('markers');
+
+		// Vue
+		const vm = new Vue({
+			el: '#restaurants',
+			data: {
+				markers: [],
+				id: '',
+				label: '',
+				image: '',
+			},
+			methods: {
+				change(e) {
+					let f = e.target.files[0];
+					crop(f, 100, 100, 'dataURL', 'image/webp').then(
+						(dataURL) => (vm.image = dataURL)
+					);
+					e.target.value = '';
+				},
+				save() {
+					ref.doc(vm.id).update({
+						label: vm.label,
+						image: vm.image,
+					});
+					info.close();
+				},
+				cancel() {
+					info.close();
+				},
+				remove(m) {
+					ref.doc(m.id).delete();
+				},
+				panTo(m) {
+					map.panTo(m.getPosition());
+					m.setAnimation(gm.Animation.BOUNCE);
+					setTimeout(() => m.setAnimation(null), 3000);
+
+					gm.event.trigger(m, 'click');
+				},
+				highlight(m) {
+					let i = vm.markers.indexOf(m);
+					let el = $(`.marker:nth-child(${i + 2})`);
+					el.addClass('animation');
+					setTimeout(() => {
+						el.removeClass('animation');
+					}, 3000);
+				},
+			},
+			created() {
+				ref.onSnapshot((snap) => {
+					snap.docChanges().forEach((change) => {
+						const { type, doc } = change;
+
+						if (type == 'added') {
+							addMarker(doc.id, doc.data());
+						}
+						if (type == 'removed') {
+							let m = vm.markers.find((m) => m.id == doc.id);
+							m.setMap(null);
+							let i = vm.markers.indexOf(m);
+							vm.markers.splice(i, 1);
+						}
+						if (type == 'modified') {
+							let m = vm.markers.find((m) => m.id == doc.id);
+							let data = doc.data();
+							m.setOptions({
+								position: data.position,
+								label: data.label,
+								image: data.image,
+							});
+						}
+					});
+				});
+			},
+		});
+
+		// Google map
+		const gm = google.maps;
+
+		const center = new gm.LatLng(5.45308771297349, 100.28485303986125);
+
+		const map = new gm.Map($('#map')[0], {
+			center,
+			zoom: 16,
+			disableDefaultUI: true,
+			clickableIcons: false,
+			disableDoubleClickZoom: true,
+		});
+
+		map.addListener('dblclick', (e) => {
+			let aLetter = letters[Math.floor(Math.random() * 10)];
+			let label = aLetter + letters.indexOf(aLetter);
+
+			ref.doc().set({
+				position: e.latLng.toJSON(),
+				label,
+				image: 'image/photo.png',
+			});
+		});
+
+		const info = new gm.InfoWindow({
+			content: $('#info')[0],
+		});
+
+		info.addListener('domready', (e) => {
+			$('#info input').focus();
+		});
+
+		const letters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'];
+		const numbers = [...'123456789'];
+
+		function addMarker(id, data) {
+			let m = new gm.Marker({
+				map,
+				animation: gm.Animation.DROP,
+				draggable: true,
+				id,
+				position: data.position,
+				label: data.label,
+				image: data.image,
+			});
+
+			vm.markers.push(m);
+
+			m.addListener('dblclick', (e) => {
+				ref.doc(m.id).delete();
+			});
+
+			m.addListener('dragend', (e) => {
+				ref.doc(m.id).update({
+					position: e.latLng.toJSON(),
+				});
+			});
+
+			m.addListener('click', (e) => {
+				vm.id = m.id;
+				vm.label = m.label;
+				vm.image = m.image;
+				info.open(map, m);
+				vm.highlight(m);
+			});
+		}
+	</script>
+</html>
