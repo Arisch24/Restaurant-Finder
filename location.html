@@ -26,19 +26,64 @@
 			</nav>
 		</header>
 		<main id="location" v-cloak>
-			<div id="panel">
-				<button @click="getLocation">Get location</button>
-				<div>Latitude = {{ lat | number(6) }}</div>
-				<div>Longitude = {{ lng | number(6) }}</div>
-				<div>Accuracy = {{ acc }} meter(s)</div>
-				<div v-for="c of circleResult">
-					<div>{{ c.label }}, {{ c.distance | number(6) }}</div>
+			<div id="display" v-if="!location">
+				<div class="container">
+					<h3>Markers in circle</h3>
+					<div
+						class="circle"
+						v-for="c of circleResult"
+						@click="panTo(c)"
+					>
+						<img :src="c.m.image" />
+						<p>Label: {{ c.m.label }}</p>
+						<small>Distance: {{ c.distance | number(6) }}</small>
+					</div>
 				</div>
-				<div v-for="r of rectangleResult">
-					<div>{{ r.label }}, {{ r.distance | number(6) }}</div>
+				<div class="container">
+					<h3>Markers in rectangle</h3>
+					<div
+						class="rectangle"
+						v-for="r of rectangleResult"
+						@click="panTo(r)"
+					>
+						<img :src="r.m.image" />
+						<p>Label: {{ r.m.label }}</p>
+						<small>Distance: {{ r.distance | number(6) }}</small>
+					</div>
 				</div>
-				<div v-for="p of polygonResult">
-					<div>{{ p.label }}, {{ p.distance | number(6) }}</div>
+				<div class="container">
+					<h3>Markers in polygon</h3>
+					<div
+						class="polygon"
+						v-for="p of polygonResult"
+						@click="panTo(p)"
+					>
+						<img :src="p.m.image" />
+						<p>{{ p.m.label }}</p>
+						<small>Distance: {{ p.distance | number(6) }}</small>
+					</div>
+				</div>
+			</div>
+			<div v-else>
+				<div>
+					<select v-model.number="radius">
+						<option>500</option>
+						<option>1000</option>
+						<option>1500</option>
+						<option>2000</option>
+						<option>2500</option>
+						<option>3000</option>
+					</select>
+					meters
+					<button @click="back">Back</button>
+				</div>
+			</div>
+			<div hidden>
+				<div id="panel">
+					<button @click="getLocation">Get location</button>
+					<p>Latitude = {{ lat | number(6) }}</p>
+					<p>Longitude = {{ lng | number(6) }}</p>
+					<p>Accuracy = {{ acc }} meter(s)</p>
 				</div>
 			</div>
 			<div hidden>
@@ -78,6 +123,13 @@
 				lat: 0,
 				lng: 0,
 				acc: 0,
+				location: false,
+				radius: 500,
+			},
+			watch: {
+				radius() {
+					home.setRadius(vm.radius);
+				},
 			},
 			methods: {
 				getLocation() {
@@ -92,6 +144,27 @@
 						fail,
 						options
 					);
+				},
+				panTo(result) {
+					map.panTo(result.m.position);
+					result.m.setAnimation(gm.Animation.BOUNCE);
+					setTimeout(() => result.m.setAnimation(null), 3000);
+
+					gm.event.trigger(result.m, 'click');
+				},
+				back() {
+					vm.location = false;
+					marker.setMap(null);
+					home.setMap(null);
+					vm.lat = 0;
+					vm.lng = 0;
+					vm.acc = 0;
+
+					map.panTo(center);
+					// enable drawing manager
+					mgr.setOptions({
+						drawingControl: true,
+					});
 				},
 			},
 			created() {
@@ -114,7 +187,13 @@
 			disableDefaultUI: true,
 			clickableIcons: false,
 			disableDoubleClickZoom: true,
+			fullscreenControl: true,
 		});
+
+		// Panel
+		const panel = $('#panel')[0];
+		panel.index = 0;
+		map.controls[gm.ControlPosition.TOP_LEFT].push(panel);
 
 		// Drawing manager
 		const mgr = new gm.drawing.DrawingManager({
@@ -142,7 +221,7 @@
 
 		let circle = null;
 		let rectangle = null;
-		let poly = null;
+		let polygon = null;
 
 		mgr.addListener('overlaycomplete', (e) => {
 			switch (e.type) {
@@ -207,7 +286,7 @@
 				if (distance <= radius) {
 					m.setIcon('image/blue.png');
 					vm.circleResult.push({
-						label: m.label,
+						m,
 						distance,
 					});
 				}
@@ -258,7 +337,7 @@
 						p2
 					);
 					vm.rectangleResult.push({
-						label: m.label,
+						m,
 						distance,
 					});
 				}
@@ -271,23 +350,32 @@
 		});
 
 		function setPolygon(path) {
-			if (poly) {
-				poly.setMap(null);
+			if (polygon) {
+				polygon.setMap(null);
 			}
 
 			// Create a new polygon based on the path given
-			poly = new gm.Polygon({
+			polygon = new gm.Polygon({
 				map,
 				path,
+				draggable: true,
 				strokeColor: 'blue',
 				fillColor: 'blue',
+			});
+
+			polygon.addListener('click', (e) => {
+				updatePolygon(polygon);
+			});
+
+			polygon.addListener('drag', (e) => {
+				updatePolygon(polygon);
 			});
 		}
 
 		function updatePolygon(p) {
 			// reset markers
 			vm.markers.forEach((m) => m.setIcon(null));
-			vm.rectangleResult = [];
+			vm.polygonResult = [];
 
 			for (let m of vm.markers) {
 				let inside = gm.geometry.poly.containsLocation(
@@ -304,19 +392,12 @@
 						p2
 					);
 					vm.polygonResult.push({
-						label: m.label,
+						m,
 						distance,
 					});
 				}
 			}
 		}
-
-		// Markers
-		const marker = new gm.Marker({
-			map,
-			animation: gm.Animation.DROP,
-			icon: 'image/home-24.png',
-		});
 
 		const info = new gm.InfoWindow({
 			content: $('#info')[0],
@@ -347,14 +428,48 @@
 			});
 		}
 
+		// Home Marker
+		const marker = new gm.Marker({
+			map,
+			animation: gm.Animation.DROP,
+			icon: 'image/home-24.png',
+		});
+
 		// Geolocation
+		let home;
 		function success(position) {
+			// set location to true
+			vm.location = true;
 			vm.lat = position.coords.latitude;
 			vm.lng = position.coords.longitude;
 			vm.acc = position.coords.accuracy;
 
+			// set all the shapes to null
+			if (circle) {
+				circle.setMap(null);
+			}
+			if (rectangle) {
+				rectangle.setMap(null);
+			}
+			if (polygon) {
+				polygon.setMap(null);
+			}
+
+			// disable drawing manager
+			mgr.setOptions({
+				drawingControl: false,
+			});
+
 			let p = new gm.LatLng(vm.lat, vm.lng);
 			marker.setPosition(p);
+			home = new gm.Circle({
+				map,
+				center: p,
+				radius: vm.radius,
+				draggable: false,
+				strokeColor: 'yellow',
+				fillColor: 'yellow',
+			});
 			map.panTo(p);
 		}
 
