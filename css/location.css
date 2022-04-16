@@ -17,21 +17,6 @@ main {
 	border: 1px solid var(--grey);
 }
 
-#panel {
-	background-color: var(--white);
-	padding: 0.5rem;
-	border-radius: 0.25rem;
-	border: 1px solid var(--grey);
-}
-
-#panel > * {
-	font-size: 1.1rem;
-}
-
-#panel > button {
-	margin-bottom: 0.25rem;
-}
-
 #info img {
 	margin-top: 0.2rem;
 	border: 1px solid var(--grey);
@@ -40,6 +25,7 @@ main {
 /* Left display panel */
 #display {
 	padding: 0.5rem;
+	overflow-y: scroll;
 }
 
 .container {
