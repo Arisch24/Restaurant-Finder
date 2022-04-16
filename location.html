@@ -21,12 +21,13 @@
 					<a href="restaurants.html">View Restaurants</a>
 					<a href="reviews.html">Reviews</a>
 					<a href="location.html">Location</a>
+					<a href="distance.html">Distance</a>
 					<a href="table.html">Table</a>
 				</ul>
 			</nav>
 		</header>
 		<main id="location" v-cloak>
-			<div id="display" v-if="!location">
+			<div id="display">
 				<div class="container">
 					<h3>Markers in circle</h3>
 					<div
@@ -36,7 +37,10 @@
 					>
 						<img :src="c.m.image" />
 						<p>Label: {{ c.m.label }}</p>
-						<small>Distance: {{ c.distance | number(6) }}</small>
+						<small
+							>Distance: {{ c.distance | number(2) }}
+							meters</small
+						>
 					</div>
 				</div>
 				<div class="container">
@@ -48,7 +52,10 @@
 					>
 						<img :src="r.m.image" />
 						<p>Label: {{ r.m.label }}</p>
-						<small>Distance: {{ r.distance | number(6) }}</small>
+						<small
+							>Distance: {{ r.distance | number(2) }}
+							meters</small
+						>
 					</div>
 				</div>
 				<div class="container">
@@ -60,32 +67,14 @@
 					>
 						<img :src="p.m.image" />
 						<p>{{ p.m.label }}</p>
-						<small>Distance: {{ p.distance | number(6) }}</small>
+						<small
+							>Distance: {{ p.distance | number(2) }}
+							meters</small
+						>
 					</div>
 				</div>
 			</div>
-			<div v-else>
-				<div>
-					<select v-model.number="radius">
-						<option>500</option>
-						<option>1000</option>
-						<option>1500</option>
-						<option>2000</option>
-						<option>2500</option>
-						<option>3000</option>
-					</select>
-					meters
-					<button @click="back">Back</button>
-				</div>
-			</div>
-			<div hidden>
-				<div id="panel">
-					<button @click="getLocation">Get location</button>
-					<p>Latitude = {{ lat | number(6) }}</p>
-					<p>Longitude = {{ lng | number(6) }}</p>
-					<p>Accuracy = {{ acc }} meter(s)</p>
-				</div>
-			</div>
+
 			<div hidden>
 				<div id="info">
 					<h3>{{ label }}</h3>
@@ -97,7 +86,7 @@
 	</body>
 	<script src="https://www.gstatic.com/firebasejs/7.17.1/firebase-app.js"></script>
 	<script src="https://www.gstatic.com/firebasejs/7.17.1/firebase-firestore.js"></script>
-	<script src="https://maps.googleapis.com/maps/api/js?key=&libraries=drawing"></script>
+	<script src="https://maps.googleapis.com/maps/api/js?key=&libraries=drawing,geometry"></script>
 	<script src="js/jquery.slim.js"></script>
 	<script src="js/vue.js"></script>
 	<script src="js/app.js"></script>
@@ -120,51 +109,14 @@
 				id: '',
 				label: '',
 				image: '',
-				lat: 0,
-				lng: 0,
-				acc: 0,
-				location: false,
-				radius: 500,
-			},
-			watch: {
-				radius() {
-					home.setRadius(vm.radius);
-				},
 			},
 			methods: {
-				getLocation() {
-					let options = {
-						enableHighAccuracy: true,
-						timeout: Infinity,
-						maximumAge: 0,
-					};
-
-					navigator.geolocation.getCurrentPosition(
-						success,
-						fail,
-						options
-					);
-				},
 				panTo(result) {
 					map.panTo(result.m.position);
 					result.m.setAnimation(gm.Animation.BOUNCE);
 					setTimeout(() => result.m.setAnimation(null), 3000);
 
 					gm.event.trigger(result.m, 'click');
-				},
-				back() {
-					vm.location = false;
-					marker.setMap(null);
-					home.setMap(null);
-					vm.lat = 0;
-					vm.lng = 0;
-					vm.acc = 0;
-
-					map.panTo(center);
-					// enable drawing manager
-					mgr.setOptions({
-						drawingControl: true,
-					});
 				},
 			},
 			created() {
@@ -189,11 +141,6 @@
 			disableDoubleClickZoom: true,
 			fullscreenControl: true,
 		});
-
-		// Panel
-		const panel = $('#panel')[0];
-		panel.index = 0;
-		map.controls[gm.ControlPosition.TOP_LEFT].push(panel);
 
 		// Drawing manager
 		const mgr = new gm.drawing.DrawingManager({
@@ -426,56 +373,6 @@
 				vm.image = m.image;
 				info.open(map, m);
 			});
-		}
-
-		// Home Marker
-		const marker = new gm.Marker({
-			map,
-			animation: gm.Animation.DROP,
-			icon: 'image/home-24.png',
-		});
-
-		// Geolocation
-		let home;
-		function success(position) {
-			// set location to true
-			vm.location = true;
-			vm.lat = position.coords.latitude;
-			vm.lng = position.coords.longitude;
-			vm.acc = position.coords.accuracy;
-
-			// set all the shapes to null
-			if (circle) {
-				circle.setMap(null);
-			}
-			if (rectangle) {
-				rectangle.setMap(null);
-			}
-			if (polygon) {
-				polygon.setMap(null);
-			}
-
-			// disable drawing manager
-			mgr.setOptions({
-				drawingControl: false,
-			});
-
-			let p = new gm.LatLng(vm.lat, vm.lng);
-			marker.setPosition(p);
-			home = new gm.Circle({
-				map,
-				center: p,
-				radius: vm.radius,
-				draggable: false,
-				strokeColor: 'yellow',
-				fillColor: 'yellow',
-			});
-			map.panTo(p);
-		}
-
-		function fail(error) {
-			// TODO(3): Display error message
-			alert(`ERROR: (${error.code} ${error.message})`);
 		}
 	</script>
 </html>
