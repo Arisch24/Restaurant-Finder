@@ -17,7 +17,65 @@ main {
 	border: 1px solid var(--grey);
 }
 
+#panel {
+	background-color: var(--white);
+	padding: 0.5rem;
+	border-radius: 0.25rem;
+	border: 1px solid var(--grey);
+}
+
+#panel > * {
+	font-size: 1.1rem;
+}
+
+#panel > button {
+	margin-bottom: 0.25rem;
+}
+
 #info img {
 	margin-top: 0.2rem;
 	border: 1px solid var(--grey);
+}
+
+/* Left display panel */
+#display {
+	padding: 0.5rem;
+}
+
+.container {
+	background: var(--white);
+	margin-bottom: 1rem;
+	padding: 0.5rem;
+}
+
+.container img {
+	border: 1px solid hsl(0, 0%, 50%);
+	width: 45px;
+	height: 45px;
+	float: left;
+	margin-right: 0.2rem;
+}
+
+.circle,
+.rectangle,
+.polygon {
+	min-height: 3.5rem;
+	margin-top: 0.25rem;
+	padding: 0.25rem;
+	border: 1px solid black;
+	cursor: pointer;
+}
+
+.circle:hover,
+.rectangle:hover,
+.polygon:hover {
+	background-color: hsl(0, 0%, 90%);
+}
+
+.circle p,
+.rectangle p,
+.polygon p {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
