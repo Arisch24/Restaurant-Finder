@@ -30,7 +30,16 @@
 				<button @click="getLocation">Get location</button>
 				<div>Latitude = {{ lat | number(6) }}</div>
 				<div>Longitude = {{ lng | number(6) }}</div>
-				<div>Accurary = {{ acc }} meter(s)</div>
+				<div>Accuracy = {{ acc }} meter(s)</div>
+				<div v-for="c of circleResult">
+					<div>{{ c.label }}, {{ c.distance | number(6) }}</div>
+				</div>
+				<div v-for="r of rectangleResult">
+					<div>{{ r.label }}, {{ r.distance | number(6) }}</div>
+				</div>
+				<div v-for="p of polygonResult">
+					<div>{{ p.label }}, {{ p.distance | number(6) }}</div>
+				</div>
 			</div>
 			<div hidden>
 				<div id="info">
@@ -60,7 +69,9 @@
 			el: '#location',
 			data: {
 				markers: [],
-				result: [],
+				circleResult: [],
+				rectangleResult: [],
+				polygonResult: [],
 				id: '',
 				label: '',
 				image: '',
@@ -139,6 +150,14 @@
 					let c = e.overlay;
 					updateCircle(c);
 					break;
+				case 'rectangle':
+					let r = e.overlay;
+					updateRectangle(r);
+					break;
+				case 'polygon':
+					let p = e.overlay;
+					updatePolygon(p);
+					break;
 			}
 		});
 
@@ -173,6 +192,7 @@
 		function updateCircle(c) {
 			// reset markers
 			vm.markers.forEach((m) => m.setIcon(null));
+			vm.circleResult = [];
 
 			// check whether there are markers in the circle radius
 			let radius = c.radius;
@@ -185,8 +205,11 @@
 				);
 
 				if (distance <= radius) {
-					m.setIcon('image/home-24.png');
-					vm.result.push(m);
+					m.setIcon('image/blue.png');
+					vm.circleResult.push({
+						label: m.label,
+						distance,
+					});
 				}
 			}
 		}
@@ -204,9 +227,42 @@
 			rectangle = new gm.Rectangle({
 				map,
 				bounds: o.bounds,
+				draggable: true,
 				strokeColor: 'green',
 				fillColor: 'green',
 			});
+
+			rectangle.addListener('click', (e) => {
+				updateRectangle(rectangle);
+			});
+
+			rectangle.addListener('drag', (e) => {
+				updateRectangle(rectangle);
+			});
+		}
+
+		function updateRectangle(r) {
+			// reset markers
+			vm.markers.forEach((m) => m.setIcon(null));
+			vm.rectangleResult = [];
+
+			for (let m of vm.markers) {
+				let inside = r.getBounds().contains(m.position);
+				if (inside) {
+					m.setIcon('image/purple.png');
+					// calculate distance of marker from center of rectangle
+					let p1 = r.getBounds().getCenter();
+					let p2 = m.position;
+					let distance = gm.geometry.spherical.computeDistanceBetween(
+						p1,
+						p2
+					);
+					vm.rectangleResult.push({
+						label: m.label,
+						distance,
+					});
+				}
+			}
 		}
 
 		mgr.addListener('polygoncomplete', (o) => {
@@ -226,6 +282,33 @@
 				strokeColor: 'blue',
 				fillColor: 'blue',
 			});
+		}
+
+		function updatePolygon(p) {
+			// reset markers
+			vm.markers.forEach((m) => m.setIcon(null));
+			vm.rectangleResult = [];
+
+			for (let m of vm.markers) {
+				let inside = gm.geometry.poly.containsLocation(
+					m.getPosition(),
+					p
+				);
+				if (inside) {
+					m.setIcon('image/orange.png');
+					// calculate distance of marker from center of polygon
+					let p1 = p.map.getCenter();
+					let p2 = m.position;
+					let distance = gm.geometry.spherical.computeDistanceBetween(
+						p1,
+						p2
+					);
+					vm.polygonResult.push({
+						label: m.label,
+						distance,
+					});
+				}
+			}
 		}
 
 		// Markers
