@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="css/style.css" />
+		<link rel="stylesheet" href="css/measure.css" />
+		<link
+			rel="shortcut icon"
+			href="image/restaurant.jpg"
+			type="image/x-icon"
+		/>
+		<title>Restaurants : Measure</title>
+	</head>
+	<body>
+		<header>
+			<h1><a href="index.html">Restaurant🍽️</a></h1>
+			<nav class="navigation-bar">
+				<ul>
+					<a href="restaurants.html">View Restaurants</a>
+					<a href="measure.html">Measure</a>
+					<a href="location.html">Location</a>
+					<a href="distance.html">Distance</a>
+					<a href="index.html#/list">Table</a>
+				</ul>
+			</nav>
+		</header>
+		<main id="measure" v-cloak>
+			<div id="loading">
+				<div v-if="editing">
+					<button @click="save">Save</button>
+					<button @click="cancel">Cancel</button>
+				</div>
+				<div v-else>
+					<button @click="load">Load</button>
+					<button @click="edit">Edit</button>
+				</div>
+
+				<hr />
+
+				<div>Length = {{ computeLength() | number(3) }} KM</div>
+				<div id="items">
+					<div class="item" v-for="(p, i) of points">
+						<span class="label">{{ i }}</span>
+						<span>
+							{{ p.lat() | number(6) }}, {{ p.lng() | number(6) }}
+						</span>
+						<input
+							type="image"
+							src="image/remove.png"
+							@click.stop="remove(i)"
+							v-if="editing"
+						/>
+					</div>
+				</div>
+			</div>
+
+			<div hidden>
+				<div id="info">
+					<h3>{{ label }}</h3>
+					<p>Description: {{ description }}</p>
+					<img :src="image" />
+				</div>
+			</div>
+			<div id="map"></div>
+		</main>
+		<script src="https://www.gstatic.com/firebasejs/7.17.1/firebase-app.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/7.17.1/firebase-firestore.js"></script>
+		<script src="https://maps.googleapis.com/maps/api/js?key=&libraries=geometry"></script>
+		<script src="js/jquery.slim.js"></script>
+		<script src="js/vue.js"></script>
+		<script src="js/app.js"></script>
+		<script>
+			// Firebase
+			firebase.initializeApp({
+				projectId: 'ewt-assignment-2',
+			});
+
+			const database = firebase.firestore().collection('polyline');
+			const db = firebase.firestore().collection('markers');
+
+			// Vue
+			const vm = new Vue({
+				el: '#measure',
+				data: {
+					id: '',
+					label: '',
+					description: '',
+					image: '',
+					editing: false,
+					points: [],
+				},
+				methods: {
+					load() {
+						// TODO(13): Load and decode path from Firebase
+						database
+							.doc('polyline')
+							.get()
+							.then((doc) => {
+								let { polyline } = doc.data() || {};
+
+								if (polyline) {
+									let arr =
+										gm.geometry.encoding.decodePath(
+											polyline
+										);
+									line.getPath().clear();
+									arr.forEach((p) => line.getPath().push(p));
+									alert('Loaded');
+								} else {
+									alert('No data');
+								}
+							});
+					},
+					edit() {
+						vm.editing = true;
+
+						line.setOptions({
+							strokeColor: 'red',
+							editable: true,
+							draggable: true,
+						});
+					},
+					remove(i) {
+						if (line.getPath().length > 2) {
+							line.getPath().removeAt(i);
+						}
+					},
+					cancel() {
+						vm.editing = false;
+
+						line.setOptions({
+							strokeColor: 'orange',
+							editable: false,
+							draggable: false,
+						});
+					},
+					save() {
+						database
+							.doc('polyline')
+							.set(
+								{
+									polyline: gm.geometry.encoding.encodePath(
+										line.getPath()
+									),
+								},
+								{ merge: true }
+							)
+							.then(() => alert('Saved'));
+						vm.cancel();
+					},
+					computeLength() {
+						if (line) {
+							return (
+								gm.geometry.spherical.computeLength(
+									line.getPath()
+								) / 1000
+							);
+						}
+
+						return 0;
+					},
+				},
+				created() {
+					db.get().then((snapshot) => {
+						snapshot.docs.forEach((doc) => {
+							addMarker(doc.id, doc.data());
+						});
+					});
+				},
+			});
+
+			// Google map
+			const gm = google.maps;
+
+			const center = { lat: 5.45308771297349, lng: 100.28485303986125 };
+
+			const map = new gm.Map($('#map')[0], {
+				center,
+				zoom: 16,
+				disableDefaultUI: true,
+				clickableIcons: false,
+				disableDoubleClickZoom: true,
+				fullscreenControl: true,
+			});
+
+			// Polyline
+			const p1 = new gm.LatLng(center.lat, center.lng - 0.01);
+			const p2 = new gm.LatLng(center.lat, center.lng + 0.01);
+
+			var line = new gm.Polyline({
+				map,
+				path: [p1, p2],
+				strokeColor: 'orange',
+				strokeWeight: 10,
+				geodesic: true,
+			});
+
+			vm.points = line.getPath().getArray();
+
+			line.getPath().addListener('insert_at', (e) => vm.$forceUpdate());
+			line.getPath().addListener('remove_at', (e) => vm.$forceUpdate());
+			line.getPath().addListener('set_at', (e) => vm.$forceUpdate());
+
+			line.addListener('rightclick', (e) => {
+				if (e.vertex != undefined && line.getPath().length > 2) {
+					line.getPath().removeAt(e.vertex);
+				}
+			});
+
+			// info window
+			const info = new gm.InfoWindow({
+				content: $('#info')[0],
+			});
+
+			info.addListener('domready', (e) => {
+				$('#info input').focus();
+			});
+
+			function addMarker(id, data) {
+				let m = new gm.Marker({
+					map,
+					animation: gm.Animation.DROP,
+					draggable: false,
+					id,
+					description: data.description,
+					position: data.position,
+					label: data.label,
+					image: data.image,
+				});
+
+				m.addListener('click', (e) => {
+					vm.id = m.id;
+					vm.label = m.label;
+					vm.description = m.description;
+					vm.image = m.image;
+					info.open(map, m);
+				});
+			}
+		</script>
+	</body>
+</html>
