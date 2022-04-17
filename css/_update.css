@@ -1,0 +1,29 @@
+.update > h2 {
+	margin: 1.5rem 0;
+}
+
+.update > .form {
+	display: flex;
+	flex-direction: column;
+	padding: 2rem;
+	border: 1px solid var(--grey);
+}
+
+.form label,
+.form input {
+	font-size: 1rem;
+	margin-bottom: 0.5rem;
+}
+
+.form input {
+	padding: 0.5rem;
+}
+
+.form img {
+	width: 100px;
+	height: 100px;
+}
+
+.form button {
+	margin-top: 1rem;
+}

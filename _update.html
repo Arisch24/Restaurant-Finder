@@ -1,0 +1,114 @@
+<template id="update">
+	<div class="update">
+		<h2>Update Marker</h2>
+
+		<form class="form" @submit.prevent="submit">
+			<label>Id</label>
+			<input v-model.trim="id" disabled />
+
+			<label>Label</label>
+			<input
+				v-model.trim="label"
+				required
+				maxlength="20"
+				@input="validateLabel"
+				title="Format 20 characters"
+				ref="label"
+			/>
+
+			<label>Latitude</label>
+			<input v-model.trim="lat" disabled />
+
+			<label>Longitude</label>
+			<input v-model.trim="lng" disabled />
+
+			<label>Photo</label>
+			<input type="file" accept="image/*" @change="change" ref="file" />
+
+			<label></label>
+			<img :src="photo || temp" class="photo" />
+
+			<div>
+				<button>Update</button>
+				<button @click.prevent="reset">Reset</button>
+				<button @click.prevent="$router.push('/list')">Cancel</button>
+			</div>
+		</form>
+	</div>
+</template>
+<script>
+	Vue.component('update', {
+		template: '#update',
+		data: () => ({
+			id: '',
+			label: '',
+			lat: '',
+			lng: '',
+			photo: '',
+			temp: '',
+		}),
+		watch: {
+			$route: {
+				handler: 'load',
+				immediate: true,
+			},
+		},
+		methods: {
+			load() {
+				let id = this.$route.params.id;
+				let m = this.$root.markers.find((m) => m.id == id);
+
+				if (m == null) {
+					this.$router.push('/list');
+					return;
+				}
+
+				this.id = m.id;
+				this.label = m.label;
+				this.lat = m.position.lat;
+				this.lng = m.position.lng;
+				this.temp = m.image;
+			},
+			validateLabel(e) {
+				let el = e.target;
+				let label = e.target.value;
+
+				el.setCustomValidity('');
+				if (el.validity.valid) {
+					let m = this.$root.markers.find((m) => m.label == label);
+					if (m) {
+						el.setCustomValidity('Duplicated label.');
+					}
+				}
+			},
+			change(e) {
+				let f = e.target.files[0];
+
+				crop(f, 100, 100, 'dataURL', 'image/webp')
+					.then((dataURL) => (this.photo = dataURL))
+					.catch((err) => (this.photo = e.target.value = ''));
+			},
+			submit() {
+				let data = {
+					label: this.label,
+				};
+
+				if (this.photo) {
+					data.image = this.photo;
+				}
+
+				ref.doc(this.id).update(data);
+				this.$router.push('/list');
+			},
+			reset() {
+				this.load();
+				this.photo = '';
+				this.$refs.file.value = '';
+				this.$refs.label.focus();
+			},
+		},
+		created() {
+			document.title = 'Restaurants: Update';
+		},
+	});
+</script>
