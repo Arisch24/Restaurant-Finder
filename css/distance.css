@@ -1,0 +1,68 @@
+body {
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+}
+
+main {
+	display: grid;
+	grid-template-rows: auto 1fr;
+	grid-template-columns: 250px 1fr;
+	grid-template-areas: 'panel map' 'panel map';
+	overflow: auto;
+}
+
+/* Map */
+#map {
+	grid-area: map;
+	border: 1px solid var(--grey);
+}
+
+/* Radius container */
+.radius-container select {
+	font-size: 1rem;
+	margin-bottom: 1rem;
+}
+
+/* Panel */
+#list {
+	padding: 1rem;
+	border-radius: 0.25rem;
+	overflow-y: scroll;
+}
+
+#panel,
+.radius-container {
+	padding: 0.5rem;
+}
+
+#panel {
+	background-color: var(--white);
+	margin-bottom: 0.5rem;
+}
+
+#panel > button {
+	margin-bottom: 0.25rem;
+}
+
+.radius-container {
+	background-color: var(--white);
+}
+
+.home {
+	cursor: pointer;
+	border: 1px solid var(--grey);
+	margin-top: 0.5rem;
+	padding: 0.5rem;
+}
+
+.home img {
+	width: 50px;
+	height: 50px;
+	border: 1px solid var(--grey);
+	float: left;
+	margin-right: 0.5rem;
+}
+
+#info img {
+	border: 1px solid var(--grey);
+}
