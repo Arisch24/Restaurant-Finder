@@ -78,6 +78,7 @@
 			<div hidden>
 				<div id="info">
 					<h3>{{ label }}</h3>
+					<p>Description: {{ description }}</p>
 					<img :src="image" />
 				</div>
 			</div>
@@ -108,6 +109,7 @@
 				polygonResult: [],
 				id: '',
 				label: '',
+				description: '',
 				image: '',
 			},
 			methods: {
@@ -381,6 +383,7 @@
 				id,
 				position: data.position,
 				label: data.label,
+				description: data.description,
 				image: data.image,
 			});
 
@@ -389,6 +392,7 @@
 			m.addListener('click', (e) => {
 				vm.id = m.id;
 				vm.label = m.label;
+				vm.description = m.description;
 				vm.image = m.image;
 				info.open(map, m);
 			});

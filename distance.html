@@ -69,6 +69,7 @@
 			<div hidden>
 				<div id="info">
 					<h3>{{ label }}</h3>
+					<p>Description: {{ description }}</p>
 					<img :src="image" />
 				</div>
 			</div>
@@ -102,6 +103,7 @@
 				radius: 500,
 				label: '',
 				image: '',
+				description: '',
 			},
 			methods: {
 				getLocation() {
@@ -222,6 +224,7 @@
 				id,
 				position: data.position,
 				label: data.label,
+				description: data.description,
 				image: data.image,
 			});
 
@@ -231,6 +234,7 @@
 				vm.id = m.id;
 				vm.label = m.label;
 				vm.image = m.image;
+				vm.description = m.description;
 				info.open(map, m);
 			});
 		}
