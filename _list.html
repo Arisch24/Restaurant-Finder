@@ -1,0 +1,100 @@
+<template id="list">
+	<div>
+		<div class="button-wrapper">
+			<button @click="checkAll">Check All</button>
+			<button @click="uncheckAll">Uncheck All</button>
+			<button @click="removeChecked" :disabled="checked.length == 0">
+				Remove Checked ({{ checked.length }})
+			</button>
+		</div>
+		<div>
+			<p>{{ count }} marker(s)</p>
+		</div>
+		<table class="table">
+			<tr>
+				<th>✅</th>
+				<th>Image</th>
+				<th
+					@click="sort('label')"
+					:class="css('label')"
+					style="cursor: pointer; user-select: none"
+				>
+					Label
+				</th>
+				<th>Position</th>
+				<th></th>
+			</tr>
+			<tr v-for="m of result">
+				<td>
+					<input type="checkbox" v-model="checked" :value="m.id" />
+				</td>
+				<td><img :src="m.image" /></td>
+				<td>{{ m.label }}</td>
+				<td>
+					Latitude: {{ m.position.lat | number(6) }}, Longitude: {{
+					m.position.lng | number(6) }}
+				</td>
+				<td>
+					<button @click="$router.push('reviews/' + m.id)">
+						reviews
+					</button>
+					<button @click="$router.push('update/' + m.id)">
+						update
+					</button>
+					<button @click="remove(m.id)">remove</button>
+				</td>
+			</tr>
+		</table>
+	</div>
+</template>
+
+<script>
+	Vue.component('list', {
+		template: '#list',
+		data: () => ({
+			checked: [],
+			reverse: false,
+			field: 'label',
+		}),
+		computed: {
+			count() {
+				return this.$root.markers.length;
+			},
+			result() {
+				let arr = this.$root.markers.slice();
+				let f = this.field;
+
+				// Sorting
+				arr.sort((a, b) => a[f].localeCompare(b[f]));
+
+				if (this.reverse) arr.reverse();
+
+				return arr;
+			},
+		},
+		methods: {
+			sort(m) {
+				this.reverse = !this.reverse;
+			},
+			css(m) {
+				return this.reverse ? 'desc' : 'asc';
+			},
+			remove(id) {
+				ref.doc(id).delete();
+			},
+			checkAll() {
+				this.checked = this.$root.markers.map((f) => f.id);
+			},
+			uncheckAll() {
+				this.checked = [];
+			},
+			removeChecked() {
+				this.checked.forEach((id) => ref.doc(id).delete());
+				this.checked = [];
+			},
+		},
+		created() {
+			document.title = 'Restaurants: List';
+		},
+	});
+</script>
