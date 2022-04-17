@@ -81,6 +81,95 @@ a {
 
 button {
 	font-size: 1rem;
-	padding: 0.1rem 0.2rem;
+	padding: 0.5rem;
 	cursor: pointer;
+}
+
+/* Vue js */
+/***** Vue.js *****/
+[v-cloak] {
+	display: none;
+}
+
+/***** Transition: fade *****/
+.fade-enter-active,
+.fade-leave-active,
+.fade-move {
+	transition: 0.5s;
+}
+
+.fade-enter,
+.fade-leave-to {
+	opacity: 0;
+}
+
+/***** Transition: zoom *****/
+.zoom-enter-active,
+.zoom-leave-active,
+.zoom-move {
+	transition: 0.5s;
+}
+
+.zoom-enter,
+.zoom-leave-to {
+	opacity: 0;
+	transform: scale(0.5);
+}
+
+/***** Transition: rotate *****/
+.rotate-enter-active,
+.rotate-leave-active,
+.rotate-move {
+	transition: 0.5s;
+}
+
+.rotate-enter,
+.rotate-leave-to {
+	opacity: 0;
+	transform: scale(0.5) rotate(3turn);
+}
+
+/***** Transition: slide *****/
+.slide-enter-active,
+.slide-leave-active,
+.slide-move {
+	transition: 0.5s;
+}
+
+.slide-enter,
+.slide-leave-to {
+	opacity: 0;
+	transform: translate(-100px, 0);
+}
+
+/***** Transition: slide-left *****/
+.slide-left-enter-active,
+.slide-left-leave-active {
+	transition: 0.25s;
+}
+
+.slide-left-enter {
+	opacity: 0;
+	transform: translate(100px, 0);
+}
+
+.slide-left-leave-to {
+	opacity: 0;
+	transform: translate(-100px, 0);
+}
+
+/***** Transition: slide-right *****/
+.slide-right-enter-active,
+.slide-right-leave-active {
+	transition: 0.25s;
+}
+
+.slide-right-enter {
+	opacity: 0;
+	transform: translate(-100px, 0);
+}
+
+.slide-right-leave-to {
+	opacity: 0;
+	transform: translate(100px, 0);
 }
