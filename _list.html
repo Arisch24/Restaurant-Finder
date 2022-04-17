@@ -21,6 +21,7 @@
 				>
 					Label
 				</th>
+				<th>Description</th>
 				<th>Position</th>
 				<th></th>
 			</tr>
@@ -30,6 +31,7 @@
 				</td>
 				<td><img :src="m.image" /></td>
 				<td>{{ m.label }}</td>
+				<td>{{ m.description }}</td>
 				<td>
 					Latitude: {{ m.position.lat | number(6) }}, Longitude: {{
 					m.position.lng | number(6) }}

@@ -52,12 +52,25 @@
 							@keydown.esc="cancel"
 						/>
 					</div>
+					<div>
+						<textarea
+							cols="25"
+							rows="5"
+							v-model.trim="description"
+							required
+						></textarea>
+					</div>
 					<label>
 						<input type="file" @change="change" hidden />
 						<img :src="image" />
 					</label>
 					<div>
 						<button>Save</button>
+						<button>
+							<a href="index.html#/reviews" target="_blank"
+								>Reviews</a
+							>
+						</button>
 						<button @click.prevent="cancel">Cancel</button>
 					</div>
 				</form>
@@ -86,12 +99,13 @@
 				markers: [],
 				id: '',
 				label: '',
+				description: '',
 				image: '',
 			},
 			methods: {
 				change(e) {
 					let f = e.target.files[0];
-					crop(f, 100, 100, 'dataURL', 'image/webp').then(
+					crop(f, 200, 200, 'dataURL', 'image/webp').then(
 						(dataURL) => (vm.image = dataURL)
 					);
 					e.target.value = '';
@@ -99,6 +113,7 @@
 				save() {
 					ref.doc(vm.id).update({
 						label: vm.label,
+						description: vm.description,
 						image: vm.image,
 					});
 					info.close();
@@ -174,6 +189,7 @@
 			ref.doc().set({
 				position: e.latLng.toJSON(),
 				label,
+				description: 'No description',
 				image: 'image/photo.png',
 			});
 		});
@@ -197,6 +213,7 @@
 				id,
 				position: data.position,
 				label: data.label,
+				description: data.description,
 				image: data.image,
 			});
 
@@ -215,6 +232,7 @@
 			m.addListener('click', (e) => {
 				vm.id = m.id;
 				vm.label = m.label;
+				vm.description = m.description;
 				vm.image = m.image;
 				info.open(map, m);
 				vm.highlight(m);
