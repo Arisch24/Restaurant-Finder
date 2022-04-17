@@ -8,6 +8,7 @@
 		<link rel="stylesheet" href="css/_list.css" />
 		<link rel="stylesheet" href="css/_reviews.css" />
 		<link rel="stylesheet" href="css/_update.css" />
+		<link rel="stylesheet" href="css/_add.css" />
 		<link
 			rel="shortcut icon"
 			href="image/restaurant.jpg"
@@ -56,6 +57,7 @@
 				{ path: '/list', component: load('list') },
 				{ path: '/reviews/:id', component: load('reviews') },
 				{ path: '/update/:id', component: load('update') },
+				{ path: '/add', component: load('add') },
 				{ path: '*', redirect: '/list' },
 			],
 		});
