@@ -97,7 +97,8 @@ main {
 	display: inline-block;
 }
 
-#info > div > input {
+#info > div > input,
+#info > div > textarea {
 	padding: 0.1rem;
 	font-size: 1rem;
 }
