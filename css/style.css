@@ -85,6 +85,10 @@ button {
 	cursor: pointer;
 }
 
+#info {
+	font-size: 1rem;
+}
+
 /* Vue js */
 /***** Vue.js *****/
 [v-cloak] {
