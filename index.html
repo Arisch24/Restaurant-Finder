@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="css/style.css" />
+		<link rel="stylesheet" href="css/_list.css" />
+		<link rel="stylesheet" href="css/_reviews.css" />
+		<link rel="stylesheet" href="css/_update.css" />
+		<link
+			rel="shortcut icon"
+			href="image/restaurant.jpg"
+			type="image/x-icon"
+		/>
+		<title>Rentals : Home</title>
+	</head>
+	<body>
+		<header>
+			<h1><a href="index.html">Rentals</a></h1>
+			<nav class="navigation-bar">
+				<ul>
+					<a href="restaurants.html">View Restaurants</a>
+					<a href="reviews.html">Reviews</a>
+					<a href="location.html">Location</a>
+					<a href="distance.html">Distance</a>
+					<a href="index.html#/list">Table</a>
+				</ul>
+			</nav>
+		</header>
+		<main id="index" v-cloak>
+			<transition name="slide" mode="out-in" appear>
+				<router-view></router-view>
+			</transition>
+		</main>
+	</body>
+	<script src="https://www.gstatic.com/firebasejs/7.17.1/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/7.17.1/firebase-firestore.js"></script>
+	<script src="js/jquery.slim.js"></script>
+	<script src="js/vue.js"></script>
+	<script src="js/vue-router.js"></script>
+	<script src="js/vuefire.js"></script>
+	<script src="js/app.js"></script>
+	<script>
+		// Firebase
+		firebase.initializeApp({
+			projectId: 'ewt-assignment-2',
+		});
+
+		const ref = firebase.firestore().collection('markers');
+
+		Vue.use(Vuefire.firestorePlugin);
+
+		const router = new VueRouter({
+			routes: [
+				{ path: '/list', component: load('list') },
+				{ path: '/reviews/:id', component: load('reviews') },
+				{ path: '/update/:id', component: load('update') },
+				{ path: '*', redirect: '/list' },
+			],
+		});
+
+		// Vue
+		const vm = new Vue({
+			router,
+			el: '#index',
+			data: {
+				markers: [],
+			},
+			firestore: {
+				markers: ref,
+			},
+			created() {},
+		});
+	</script>
+</html>
