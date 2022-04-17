@@ -1,0 +1,97 @@
+<template id="add">
+	<div>
+		<div class="form-container">
+			<h2>Add Your Review</h2>
+			<form class="form" @submit.prevent="submit" ref="form">
+				<label>Name</label>
+				<input
+					v-model.trim="name"
+					v-focus
+					required
+					maxlength="20"
+					ref="name"
+				/>
+
+				<label>Subject</label>
+				<input v-model.trim="subject" required maxlength="30" />
+
+				<label>Review</label>
+				<textarea
+					cols="30"
+					rows="10"
+					v-model.trim="description"
+					required
+				>
+				</textarea>
+
+				<div>
+					<button>Add</button>
+					<button @click.prevent="reset">Reset</button>
+					<button @click.prevent="$router.push('/reviews/' + id)">
+						Back
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</template>
+<script>
+	Vue.component('add', {
+		template: '#add',
+		data: () => ({
+			id: '',
+			label: '',
+			name: '',
+			subject: '',
+			description: '',
+			date: '',
+		}),
+		watch: {
+			$route: {
+				handler: 'load',
+				immediate: true,
+			},
+		},
+		methods: {
+			load() {
+				let id = this.$route.params.id;
+				let m = this.$root.markers.find((m) => m.id == id);
+
+				if (m == null) {
+					this.$router.push('/list');
+					return;
+				}
+
+				this.id = m.id;
+				this.label = m.label;
+			},
+			submit() {
+				let d = new Date();
+
+				let dateNow =
+					d.getDate() + '-' + d.getMonth() + '-' + d.getFullYear();
+
+				let data = {
+					name: this.name,
+					subject: this.subject,
+					description: this.description,
+					date: dateNow,
+				};
+
+				ref.doc(this.id)
+					.update({
+						reviews: firebase.firestore.FieldValue.arrayUnion(data),
+					})
+					.then(alert('Your review has been accepted'));
+				this.$router.push('/reviews/' + this.id);
+			},
+			reset() {
+				this.load();
+				this.$refs.name.focus();
+			},
+		},
+		created() {
+			document.title = 'Restaurants: Reviews';
+		},
+	});
+</script>

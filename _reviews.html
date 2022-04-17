@@ -1,0 +1,73 @@
+<template id="reviews">
+	<div>
+		<div class="container">
+			<h2>{{ label }}</h2>
+			<p>{{ description }}</p>
+
+			<hr />
+
+			<p>Latitude: {{ lat }}</p>
+			<p>Longitude: {{ lng }}</p>
+			<img :src="image" />
+			<button @click.prevent="$router.push('/list')">Back</button>
+		</div>
+		<div class="reviews-container">
+			<h3>Reviews for this restaurant</h3>
+			<button @click="$router.push('/add/' + id)">Add review</button>
+			<div class="reviews" v-for="r of reviews">
+				<b>{{ r.name }}</b>
+				<i>{{ r.date }}</i>
+				<p>{{ r.subject }}</p>
+				<p>{{ r.description }}</p>
+			</div>
+		</div>
+	</div>
+</template>
+<script>
+	Vue.component('reviews', {
+		template: '#reviews',
+		data: () => ({
+			id: '',
+			label: '',
+			description: '',
+			lat: '',
+			lng: '',
+			image: '',
+			reviews: [],
+		}),
+		watch: {
+			$route: {
+				handler: 'load',
+				immediate: true,
+			},
+		},
+		methods: {
+			load() {
+				let id = this.$route.params.id;
+				let m = this.$root.markers.find((m) => m.id == id);
+
+				if (m == null) {
+					this.$router.push('/list');
+					return;
+				}
+
+				this.id = m.id;
+				this.label = m.label;
+				this.description = m.description;
+				this.lat = m.position.lat;
+				this.lng = m.position.lng;
+				this.image = m.image;
+				this.reviews = m.reviews;
+			},
+			css() {
+				$('.form-container').toggle('active');
+			},
+			reset() {
+				this.$refs.form.reset();
+			},
+		},
+		created() {
+			document.title = 'Restaurants: Reviews';
+		},
+	});
+</script>

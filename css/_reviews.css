@@ -1,0 +1,50 @@
+.container {
+	margin-top: 2rem;
+	min-width: 50vw;
+	display: flex;
+	align-items: center;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 2rem;
+	border: 1px solid var(--tertiary);
+}
+
+hr {
+	border: 1px solid hsl(0, 0%, 80%);
+}
+
+.container img {
+	width: 100px;
+	height: 100px;
+	border: 1px solid hsl(0, 0%, 80%);
+}
+
+.reviews-container {
+	margin: 1rem 0;
+	position: relative;
+	border: 1px solid var(--tertiary);
+	padding: 2rem;
+	overflow-y: scroll;
+}
+
+.reviews-container h3 {
+	margin: 2rem 0;
+}
+
+.reviews-container > button {
+	position: absolute;
+	top: 1rem;
+	right: 1rem;
+}
+
+.reviews {
+	background-color: var(--white);
+	border-radius: 0.25rem;
+	border: 1px solid var(--grey);
+	margin: 0.5rem 0;
+	padding: 1rem;
+}
+
+.reviews b {
+	display: block;
+}
