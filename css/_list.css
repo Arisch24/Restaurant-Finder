@@ -45,11 +45,12 @@ th.desc::after {
 	height: 50px;
 }
 
-input {
+input[type='checkbox'] {
 	cursor: pointer;
 }
 
-input[type='search'] {
+input[type='search'],
+textarea {
 	font-size: 1rem;
 	padding: 0.5rem;
 	margin-bottom: 0.5rem;
