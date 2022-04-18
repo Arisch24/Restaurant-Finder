@@ -190,6 +190,9 @@
 
 			let p = new gm.LatLng(vm.lat, vm.lng);
 			marker.setPosition(p);
+			if (home) {
+				home.setMap(null);
+			}
 			home = new gm.Circle({
 				map,
 				center: p,
